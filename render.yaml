@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: hg-abogados-ia
+    env: python
+    region: oregon
+    plan: professional
+    buildCommand: |
+      echo "🚀 Configurando entorno de despliegue seguro H&G Abogados IA..."
+      apt-get update && apt-get install -y software-properties-common
+      add-apt-repository ppa:deadsnakes/ppa -y
+      apt-get update
+      apt-get install -y python3.10 python3.10-venv python3.10-dev g++ make
+      ln -sf /usr/bin/python3.10 /usr/bin/python
+      ln -sf /usr/bin/pip3 /usr/bin/pip
+      echo "🐍 Versión activa de Python:" $(python --version)
+      python -m venv venv
+      . venv/bin/activate
+      pip install --upgrade pip setuptools wheel
+      echo "📦 Instalando dependencias del proyecto..."
+      pip install -r requirements.txt
+      echo "🧠 Instalando Playwright y Chromium..."
+      playwright install --with-deps chromium
+      echo "✅ Entorno de H&G Abogados IA configurado correctamente."
+    startCommand: |
+      . venv/bin/activate
+      gunicorn -k uvicorn.workers.UvicornWorker main:app
+    autoDeploy: true
+    envVars:
+      - key: FIELWEB_USERNAME
+        value: consultor@hygabogados.ec
+      - key: FIELWEB_PASSWORD
+        value: consultor@hygabogados.ec
+      - key: FIELWEB_LOGIN_URL
+        value: https://www.fielweb.com/Cuenta/Login.aspx
+      - key: X_API_KEY
+        value: HYGABOGADOS-SECURE-2025
