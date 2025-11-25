@@ -43,6 +43,26 @@ NAV_TIMEOUT_MS = 35_000
 MAX_ITEMS = 10
 
 # ================================
+# Proxy opcional desde entorno
+# ================================
+def _proxy_config() -> Optional[dict]:
+    """
+    Construye la configuración de proxy si se definen:
+    HTTP_PROXY/HTTPS_PROXY (server) y HTTP_PROXY_USER/HTTP_PROXY_PASS (auth opcional).
+    """
+    proxy = os.getenv("HTTP_PROXY") or os.getenv("HTTPS_PROXY")
+    if not proxy:
+        return None
+    cfg = {"server": proxy}
+    user = os.getenv("HTTP_PROXY_USER")
+    pwd = os.getenv("HTTP_PROXY_PASS")
+    if user:
+        cfg["username"] = user
+        if pwd:
+            cfg["password"] = pwd
+    return cfg
+
+# ================================
 # 🔧 SELECTORES ADAPTATIVOS
 # ================================
 LOGIN_SELECTORS = {
@@ -160,9 +180,13 @@ async def _buscar_en_fielweb_async(texto: str) -> Dict[str, Any]:
         "--disable-web-security"
     ]
 
+    proxy_cfg = _proxy_config()
+    if proxy_cfg:
+        debug_log(f"Usando proxy: {proxy_cfg.get('server')}")
+        
     debug_log("Lanzando navegador Playwright Chromium...")
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=launch_args)
+        browser = await p.chromium.launch(headless=True, args=launch_args, proxy=proxy_cfg)
         context = await browser.new_context()
         page = await context.new_page()
         page.set_default_timeout(PAGE_TIMEOUT_MS)
