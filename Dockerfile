@@ -27,7 +27,9 @@ ENV HTTP_PROXY="" \
     HTTPS_PROXY=""
 
 # ---- Instalar dependencias Python ----
-RUN pip install --no-cache-dir -r requirements.txt
+# Limpia proxies en el paso de build para que pip use la red directa
+RUN unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy && \
+    pip install --no-cache-dir -r requirements.txt
 
 # ---- Instalar Playwright sin dependencias del sistema ----
 RUN python -m playwright install chromium || true
