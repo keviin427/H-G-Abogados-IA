@@ -22,6 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY . /app
 
+# ---- Evitar uso de proxy durante el build (pip) ----
+ENV HTTP_PROXY="" \
+    HTTPS_PROXY=""
+
 # ---- Instalar dependencias Python ----
 RUN pip install --no-cache-dir -r requirements.txt
 
